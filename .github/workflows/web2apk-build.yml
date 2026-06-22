@@ -1,0 +1,30 @@
+name: Web2Apk Build
+on:
+  workflow_dispatch:
+    inputs:
+      web_url:
+        required: true
+      app_name:
+        required: true
+      icon_url:
+        required: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - name: Build
+        run: |
+          npm install -g web2apk-cli
+          web2apk build \
+            --url "${{ github.event.inputs.web_url }}" \
+            --name "${{ github.event.inputs.app_name }}" \
+            --icon "${{ github.event.inputs.icon_url }}" \
+            --output ./app.apk
+      - uses: actions/upload-artifact@v3
+        with:
+          name: app
+          path: ./app.apk
