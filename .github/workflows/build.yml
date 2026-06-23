@@ -3,30 +3,50 @@ on:
   workflow_dispatch:
     inputs:
       release_url:
+        description: 'Release URL'
         required: true
       tag:
+        description: 'Release Tag'
         required: true
       build_type:
-        default: release
+        description: 'Build Type'
+        required: true
+        default: 'release'
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    
     steps:
       - uses: actions/checkout@v4
+      
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.16.0'
+          channel: 'stable'
+      
       - name: Download & Build
         run: |
-          curl -L -o source.zip "${{ github.event.inputs.release_url }}/download/source.zip"
+          # 🔥 FIX: Pake URL download yang benar
+          DOWNLOAD_URL="https://github.com/${{ github.repository }}/releases/download/${{ github.event.inputs.tag }}/source.zip"
+          
+          echo "📥 Downloading from: $DOWNLOAD_URL"
+          curl -L -o source.zip "$DOWNLOAD_URL"
+          
+          # Cek file zip
+          file source.zip
+          unzip -l source.zip || echo "❌ BUKAN ZIP VALID!"
+          
           unzip source.zip -d project
           cd project
           flutter pub get
+          
           if [ "${{ github.event.inputs.build_type }}" = "debug" ]; then
             flutter build apk --debug
           else
             flutter build apk --release
           fi
+      
       - uses: actions/upload-artifact@v4
         with:
           name: app
