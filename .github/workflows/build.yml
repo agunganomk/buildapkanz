@@ -20,34 +20,32 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      # 🔥 PAKE FLUTTER VERSION YANG LEBIH BARU
-      - uses: subosito/flutter-action@v2
+      # 🔥 PAKE FLUTTER MASTER (VERSI PALING BARU)
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.24.0'  # ← GANTI
-          channel: 'stable'
+          channel: 'master'  # ← PAKE MASTER
       
       - name: Download & Build
         run: |
           echo "📥 Download: ${{ github.event.inputs.release_url }}"
           curl -L -o source.zip "${{ github.event.inputs.release_url }}"
           
-          echo "🔍 Checking file..."
-          file source.zip
-          ls -la source.zip
-          
           echo "📦 Extracting..."
           unzip -o source.zip -d project
           
           cd project
-          echo "📂 Project contents:"
-          ls -la
           
-          # 🔥 CETAK VERSION UNTUK DEBUG
+          # 🔥 CETAK VERSI UNTUK DEBUG
           echo "📦 Flutter version:"
           flutter --version
           
           echo "📦 Getting dependencies..."
-          flutter pub get
+          flutter pub get || {
+            echo "❌ Flutter pub get failed!"
+            echo "📋 Trying alternative..."
+            flutter pub get --offline || exit 1
+          }
           
           echo "🔨 Building APK..."
           if [ "${{ github.event.inputs.build_type }}" = "debug" ]; then
