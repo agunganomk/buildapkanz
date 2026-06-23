@@ -31,13 +31,29 @@ jobs:
           curl -L -o source.zip "${{ github.event.inputs.release_url }}"
           
           # Cek file
+          echo "🔍 Checking file..."
           file source.zip
           ls -la source.zip
           
-          unzip source.zip -d project
-          cd project
-          flutter pub get
+          # Coba unzip
+          echo "📦 Extracting..."
+          unzip -o source.zip -d project || {
+            echo "❌ Failed to unzip!"
+            cat source.zip
+            exit 1
+          }
           
+          cd project
+          echo "📂 Contents:"
+          ls -la
+          
+          echo "📦 Getting dependencies..."
+          flutter pub get || {
+            echo "❌ Flutter pub get failed!"
+            exit 1
+          }
+          
+          echo "🔨 Building APK..."
           if [ "${{ github.event.inputs.build_type }}" = "debug" ]; then
             flutter build apk --debug
           else
