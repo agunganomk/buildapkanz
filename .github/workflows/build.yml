@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
     inputs:
       release_url:
-        description: 'Release URL'
+        description: 'Release URL (download link)'
         required: true
       tag:
         description: 'Release Tag'
@@ -27,15 +27,12 @@ jobs:
       
       - name: Download & Build
         run: |
-          # 🔥 FIX: Pake URL download yang benar
-          DOWNLOAD_URL="https://github.com/${{ github.repository }}/releases/download/${{ github.event.inputs.tag }}/source.zip"
+          echo "📥 Downloading from: ${{ github.event.inputs.release_url }}"
+          curl -L -o source.zip "${{ github.event.inputs.release_url }}"
           
-          echo "📥 Downloading from: $DOWNLOAD_URL"
-          curl -L -o source.zip "$DOWNLOAD_URL"
-          
-          # Cek file zip
+          # Cek file
           file source.zip
-          unzip -l source.zip || echo "❌ BUKAN ZIP VALID!"
+          ls -la source.zip
           
           unzip source.zip -d project
           cd project
