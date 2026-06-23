@@ -1,31 +1,51 @@
 name: Flutter Build
+
 on:
   workflow_dispatch:
     inputs:
       release_url:
+        description: 'Release URL'
         required: true
       tag:
+        description: 'Release Tag'
         required: true
       build_type:
-        default: release
+        description: 'Build Type (debug/release)'
+        required: true
+        default: 'release'
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    
     steps:
-      - uses: actions/checkout@v3
-      - uses: subosito/flutter-action@v2
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.16.0'
-      - name: Download & Build
+          channel: 'stable'
+      
+      - name: Download Source
         run: |
           curl -L -o source.zip "${{ github.event.inputs.release_url }}/download/source.zip"
+          mkdir project
           unzip source.zip -d project
+      
+      - name: Build APK
+        run: |
           cd project
           flutter pub get
-          flutter build apk ${{
-            github.event.inputs.build_type == 'debug' && '--debug' || '--release'
-          }}
-      - uses: actions/upload-artifact@v3
+          if [ "${{ github.event.inputs.build_type }}" = "debug" ]; then
+            flutter build apk --debug
+          else
+            flutter build apk --release
+          fi
+      
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
         with:
           name: app
           path: project/build/app/outputs/flutter-apk/*.apk
