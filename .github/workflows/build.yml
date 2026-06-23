@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
     inputs:
       release_url:
-        description: 'Release URL (download link)'
+        description: 'Release URL'
         required: true
       tag:
         description: 'Release Tag'
@@ -20,38 +20,34 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
+      # 🔥 PAKE FLUTTER VERSION YANG LEBIH BARU
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.16.0'
+          flutter-version: '3.24.0'  # ← GANTI
           channel: 'stable'
       
       - name: Download & Build
         run: |
-          echo "📥 Downloading from: ${{ github.event.inputs.release_url }}"
+          echo "📥 Download: ${{ github.event.inputs.release_url }}"
           curl -L -o source.zip "${{ github.event.inputs.release_url }}"
           
-          # Cek file
           echo "🔍 Checking file..."
           file source.zip
           ls -la source.zip
           
-          # Coba unzip
           echo "📦 Extracting..."
-          unzip -o source.zip -d project || {
-            echo "❌ Failed to unzip!"
-            cat source.zip
-            exit 1
-          }
+          unzip -o source.zip -d project
           
           cd project
-          echo "📂 Contents:"
+          echo "📂 Project contents:"
           ls -la
           
+          # 🔥 CETAK VERSION UNTUK DEBUG
+          echo "📦 Flutter version:"
+          flutter --version
+          
           echo "📦 Getting dependencies..."
-          flutter pub get || {
-            echo "❌ Flutter pub get failed!"
-            exit 1
-          }
+          flutter pub get
           
           echo "🔨 Building APK..."
           if [ "${{ github.event.inputs.build_type }}" = "debug" ]; then
